@@ -20,11 +20,22 @@ app.use("/usuarios", userRoutes);
 app.use("/pets", PetRoutes);
 
 app.get("/", (req, res) => {
-    res.send("API PawConnect funcionando 🚀");
+    res.json({ mensagem: "API PawConnect funcionando 🚀" });
+});
+
+// Middleware para rotas não encontradas (404)
+app.use((req, res) => {
+    res.status(404).json({ mensagem: "Rota não encontrada." });
+});
+
+// Middleware de tratamento global de erros
+app.use((err, req, res, next) => {
+    console.error("Erro interno:", err);
+    res.status(500).json({ mensagem: "Erro interno no servidor.", erro: err.message });
 });
 
 const PORT = process.env.PORT || 5000;
 
 app.listen(PORT, () => {
     console.log(`Servidor rodando na porta ${PORT}`);
-});
+});
