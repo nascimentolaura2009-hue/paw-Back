@@ -1,4 +1,6 @@
 import Pet from "../models/Pet.js";
+import mongoose from "mongoose";
+import conectarBanco from "../config/db.js";
 
 // Create a new pet
 export const createPet = async (req, res) => {
@@ -15,8 +17,10 @@ export const createPet = async (req, res) => {
       status
     } = req.body;
 
-    const petName = name || nome;
-    const petSpecies = species || especie || tipo;
+    const petName = (name || nome || "").trim();
+    const petSpecies = (species || especie || tipo || "").trim();
+
+    console.log(`📥 [PET CREATE]: Tentativa de cadastro de pet: "${petName}" (${petSpecies})`);
 
     if (!petName || !petSpecies) {
       return res.status(400).json({
@@ -25,20 +29,28 @@ export const createPet = async (req, res) => {
       });
     }
 
+    if (mongoose.connection.readyState !== 1) {
+      console.log("⏳ [PET CREATE]: Aguardando conexão com banco de dados...");
+      await conectarBanco();
+    }
+
     const pet = await Pet.create({
       name: petName,
       species: petSpecies,
-      breed: breed || raca || "Misto / Vira-lata",
-      age: age !== undefined ? Number(age) : (idade !== undefined ? Number(idade) : 0),
-      gender: gender || genero || "Male",
-      size: size || porte || "Medium",
-      description: description || descricao || "",
-      image: image || imagem || imageUrl || "",
+      breed: (breed || raca || "Misto / Vira-lata").trim(),
+      age: age !== undefined && age !== "" ? Number(age) : (idade !== undefined && idade !== "" ? Number(idade) : 0),
+      gender: gender || genero || "Macho",
+      size: size || porte || "Médio",
+      description: (description || descricao || "").trim(),
+      image: (image || imagem || imageUrl || "").trim(),
       status: status || "available",
     });
 
+    console.log(`✅ [PET CREATED]: Pet criado com sucesso no MongoDB! ID: ${pet._id}`);
+
     return res.status(201).json(pet);
   } catch (error) {
+    console.error("💥 [PET CREATE ERROR]:", error);
     return res.status(500).json({
       message: "Error creating pet",
       mensagem: "Erro ao cadastrar pet",
@@ -64,9 +76,17 @@ export const getAllPets = async (req, res) => {
       ];
     }
 
+    if (mongoose.connection.readyState !== 1) {
+      console.log("⏳ [PET GET ALL]: Aguardando conexão com banco de dados...");
+      await conectarBanco();
+    }
+
     const pets = await Pet.find(filter).sort({ createdAt: -1 });
+    console.log(`🐾 [PET GET ALL]: ${pets.length} pet(s) encontrados no MongoDB.`);
+
     return res.status(200).json(pets);
   } catch (error) {
+    console.error("💥 [PET GET ALL ERROR]:", error);
     return res.status(500).json({
       message: "Error fetching pets",
       mensagem: "Erro ao listar pets",
@@ -78,6 +98,10 @@ export const getAllPets = async (req, res) => {
 // Get a pet by ID
 export const getPetById = async (req, res) => {
   try {
+    if (mongoose.connection.readyState !== 1) {
+      await conectarBanco();
+    }
+
     const pet = await Pet.findById(req.params.id);
     if (!pet) {
       return res.status(404).json({
@@ -98,6 +122,10 @@ export const getPetById = async (req, res) => {
 // Update a pet by ID
 export const updatePet = async (req, res) => {
   try {
+    if (mongoose.connection.readyState !== 1) {
+      await conectarBanco();
+    }
+
     const updateData = { ...req.body };
     if (updateData.nome && !updateData.name) updateData.name = updateData.nome;
     if (updateData.especie && !updateData.species) updateData.species = updateData.especie;
@@ -131,6 +159,10 @@ export const updatePet = async (req, res) => {
 // Delete a pet by ID
 export const deletePet = async (req, res) => {
   try {
+    if (mongoose.connection.readyState !== 1) {
+      await conectarBanco();
+    }
+
     const pet = await Pet.findByIdAndDelete(req.params.id);
     if (!pet) {
       return res.status(404).json({
