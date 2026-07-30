@@ -13,7 +13,7 @@ dotenv.config();
 
 const app = express();
 
-// Configuração de CORS para aceitar requisições de qualquer origem e com credenciais
+// Configuração robusta de CORS
 app.use(cors({
   origin: true,
   credentials: true,
@@ -26,23 +26,28 @@ app.use(express.json());
 // Conexão com o Banco de Dados MongoDB
 conectarBanco();
 
-// Rotas de Autenticação (mapeamento completo para evitar 404)
+// Rotas de Autenticação e Registro (mapeamento universal sem erros 404)
 app.use("/auth", authRoutes);
 app.use("/api/auth", authRoutes);
-app.post("/login", login);
-app.post("/api/login", login);
-app.post("/register", register);
-app.post("/api/register", register);
 
-// Rotas de Usuários
 app.use("/usuarios", userRoutes);
 app.use("/api/usuarios", userRoutes);
+
+// Atalhos diretos para endpoints globais de cadastro e login
+app.post("/register", register);
+app.post("/api/register", register);
+app.post("/cadastrar", register);
+app.post("/api/cadastrar", register);
+app.post("/cadastro", register);
+app.post("/api/cadastro", register);
+app.post("/login", login);
+app.post("/api/login", login);
 
 // Rotas de Pets
 app.use("/pets", petRoutes);
 app.use("/api/pets", petRoutes);
 
-// Endpoint de teste e saúde da API
+// Endpoint de teste e saúde
 app.get("/", (req, res) => {
     res.json({ mensagem: "API PawConnect funcionando 🚀", status: "online", port: process.env.PORT || 5000 });
 });
@@ -55,10 +60,10 @@ app.get("/api/health", (req, res) => {
     res.json({ status: "OK", timestamp: new Date() });
 });
 
-// Middleware para rotas não encontradas (404) com log para diagnóstico
+// Middleware 404 com log detalhado para o Render
 app.use((req, res) => {
     console.warn(`[404 NOT FOUND] ${req.method} ${req.originalUrl}`);
-    res.status(404).json({ mensagem: `Rota '${req.originalUrl}' não encontrada no servidor.` });
+    res.status(404).json({ mensagem: `Rota '${req.originalUrl}' não encontrada no servidor PawConnect.` });
 });
 
 // Middleware de tratamento global de erros
