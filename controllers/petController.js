@@ -13,14 +13,15 @@ export const createPet = async (req, res) => {
       gender, genero,
       size, porte,
       description, descricao,
-      image, imagem, imageUrl,
+      image, imagem, imageUrl, foto, photo, url, fotoUrl,
       status
     } = req.body;
 
     const petName = (name || nome || "").trim();
     const petSpecies = (species || especie || tipo || "").trim();
+    const rawImage = (image || imagem || imageUrl || foto || photo || url || fotoUrl || "").trim();
 
-    console.log(`📥 [PET CREATE]: Tentativa de cadastro de pet: "${petName}" (${petSpecies})`);
+    console.log(`📥 [PET CREATE]: Tentativa de cadastro: "${petName}" (${petSpecies}) | Imagem: ${rawImage || "sem imagem"}`);
 
     if (!petName || !petSpecies) {
       return res.status(400).json({
@@ -42,11 +43,11 @@ export const createPet = async (req, res) => {
       gender: gender || genero || "Macho",
       size: size || porte || "Médio",
       description: (description || descricao || "").trim(),
-      image: (image || imagem || imageUrl || "").trim(),
+      image: rawImage,
       status: status || "available",
     });
 
-    console.log(`✅ [PET CREATED]: Pet criado com sucesso no MongoDB! ID: ${pet._id}`);
+    console.log(`✅ [PET CREATED]: Pet "${pet.name}" salvo no MongoDB com a imagem: "${pet.image}" (ID: ${pet._id})`);
 
     return res.status(201).json(pet);
   } catch (error) {
@@ -132,7 +133,10 @@ export const updatePet = async (req, res) => {
     if (updateData.tipo && !updateData.species) updateData.species = updateData.tipo;
     if (updateData.idade !== undefined && updateData.age === undefined) updateData.age = Number(updateData.idade);
     if (updateData.descricao && !updateData.description) updateData.description = updateData.descricao;
-    if (updateData.imagem && !updateData.image) updateData.image = updateData.imagem;
+    
+    // Normalizar campo de imagem nas atualizações
+    const newImage = updateData.image || updateData.imagem || updateData.imageUrl || updateData.foto;
+    if (newImage) updateData.image = newImage.trim();
 
     const pet = await Pet.findByIdAndUpdate(req.params.id, updateData, {
       new: true,
