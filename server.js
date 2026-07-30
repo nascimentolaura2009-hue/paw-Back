@@ -12,9 +12,10 @@ dotenv.config();
 
 const app = express();
 
-// Configuração robusta do CORS para aceitar requisições do Front-End
+// Configuração robusta de CORS compatível com credentials: true em produção (Vercel / Render)
 app.use(cors({
-  origin: "*",
+  origin: true,
+  credentials: true,
   methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
   allowedHeaders: ["Content-Type", "Authorization"],
 }));
