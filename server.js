@@ -6,7 +6,7 @@ import conectarBanco from "./config/db.js";
 
 import userRoutes from "./routes/userRoutes.js";
 import authRoutes from "./routes/authRoutes.js";
-import petRoutes from "./routes/petRoutes.js";
+import petRoutes from "./routes/PetRoutes.js";
 import { login, register } from "./controllers/authController.js";
 
 dotenv.config();
@@ -43,7 +43,7 @@ app.post("/api/cadastro", register);
 app.post("/login", login);
 app.post("/api/login", login);
 
-// Rotas de Pets
+// Rotas de Pets (importando PetRoutes.js de forma 100% case-sensitive para o Linux/Render)
 app.use("/pets", petRoutes);
 app.use("/api/pets", petRoutes);
 

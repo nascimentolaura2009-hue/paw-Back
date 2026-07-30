@@ -1,2 +1,2 @@
-import petRoutes from "./petRoutes.js";
-export default petRoutes;
+import PetRoutes from "./PetRoutes.js";
+export default PetRoutes;
