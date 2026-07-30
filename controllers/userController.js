@@ -1,52 +1,9 @@
 import User from "../models/User.js";
+import { register, login } from "./authController.js";
 
-// Cadastrar novo usuário
-export const cadastrarUsuario = async (req, res) => {
-  try {
-    const { nome, email, senha } = req.body;
-
-    if (!nome || !email || !senha) {
-      return res.status(400).json({ mensagem: "Nome, e-mail e senha são obrigatórios." });
-    }
-
-    const usuarioExistente = await User.findOne({ email });
-    if (usuarioExistente) {
-      return res.status(400).json({ mensagem: "Este e-mail já está cadastrado." });
-    }
-
-    const usuario = await User.create({ nome, email, senha });
-    return res.status(201).json(usuario);
-  } catch (erro) {
-    return res.status(500).json({ mensagem: "Erro ao cadastrar usuário", erro: erro.message });
-  }
-};
-
-// Login de usuário
-export const loginUsuario = async (req, res) => {
-  try {
-    const { email, senha } = req.body;
-
-    if (!email || !senha) {
-      return res.status(400).json({ mensagem: "E-mail e senha são obrigatórios." });
-    }
-
-    const usuario = await User.findOne({ email });
-    if (!usuario || usuario.senha !== senha) {
-      return res.status(401).json({ mensagem: "Credenciais inválidas." });
-    }
-
-    return res.status(200).json({
-      mensagem: "Login realizado com sucesso",
-      usuario: {
-        id: usuario._id,
-        nome: usuario.nome,
-        email: usuario.email,
-      },
-    });
-  } catch (erro) {
-    return res.status(500).json({ mensagem: "Erro ao realizar login", erro: erro.message });
-  }
-};
+// Aliases para manter 100% de compatibilidade com rotas legadas
+export const cadastrarUsuario = register;
+export const loginUsuario = login;
 
 // Listar todos os usuários
 export const listarUsuarios = async (req, res) => {
@@ -100,4 +57,4 @@ export const deletarUsuario = async (req, res) => {
   } catch (erro) {
     return res.status(500).json({ mensagem: "Erro ao deletar usuário", erro: erro.message });
   }
-};
+};

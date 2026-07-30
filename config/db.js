@@ -2,11 +2,11 @@ import mongoose from "mongoose";
 
 const conectarBanco = async () => {
     try {
-        await mongoose.connect(process.env.MONGO_URI);
-
-        console.log("MongoDB conectado");
+        const mongoURI = process.env.MONGO_URI || "mongodb://127.0.0.1:27017/pawconnect";
+        await mongoose.connect(mongoURI);
+        console.log("MongoDB conectado com sucesso! 🚀");
     } catch (erro) {
-        console.log(erro);
+        console.error("Erro ao conectar ao MongoDB:", erro.message);
     }
 };
 
