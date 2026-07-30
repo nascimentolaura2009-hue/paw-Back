@@ -1,49 +1,79 @@
 import mongoose from "mongoose";
 
-const PetSchema = new mongoose.Schema(
+const petSchema = new mongoose.Schema(
   {
-    nome: {
+    name: {
       type: String,
-      required: true,
+      required: [true, "Pet name is required"],
       trim: true,
     },
-    especie: {
+    species: {
       type: String,
-      required: true,
+      required: [true, "Pet species is required"],
       trim: true,
     },
-    tipo: {
+    breed: {
       type: String,
+      default: "Misto / Vira-lata",
       trim: true,
     },
-    idade: {
+    age: {
       type: Number,
+      default: 0,
+      min: [0, "Age cannot be negative"],
     },
-    descricao: {
+    gender: {
+      type: String,
+      enum: ["Male", "Female", "Macho", "Fêmea", "Other"],
+      default: "Male",
+    },
+    size: {
+      type: String,
+      enum: ["Small", "Medium", "Large", "Pequeno", "Médio", "Grande"],
+      default: "Medium",
+    },
+    description: {
       type: String,
       trim: true,
+      default: "",
     },
-    imagem: {
+    image: {
       type: String,
       default: "",
     },
     status: {
       type: String,
-      enum: ["disponivel", "adotado", "perdido"],
-      default: "disponivel",
+      enum: ["available", "adopted", "lost", "disponivel", "adotado", "perdido"],
+      default: "available",
     },
   },
   {
     timestamps: true,
+    toJSON: { virtuals: true },
+    toObject: { virtuals: true },
   }
 );
 
-// Garantir que tipo seja sincronizado com especie caso não informado
-PetSchema.pre("save", function (next) {
-  if (!this.tipo && this.especie) {
-    this.tipo = this.especie;
-  }
-  next();
+// Virtual aliases for Portuguese backward compatibility
+petSchema.virtual("nome").get(function () {
+  return this.name;
+});
+petSchema.virtual("especie").get(function () {
+  return this.species;
+});
+petSchema.virtual("tipo").get(function () {
+  return this.species;
+});
+petSchema.virtual("idade").get(function () {
+  return this.age;
+});
+petSchema.virtual("descricao").get(function () {
+  return this.description;
+});
+petSchema.virtual("imagem").get(function () {
+  return this.image;
 });
 
-export default mongoose.model("Pet", PetSchema);
+const Pet = mongoose.model("Pet", petSchema);
+
+export default Pet;

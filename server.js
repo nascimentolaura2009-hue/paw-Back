@@ -5,7 +5,8 @@ import dotenv from "dotenv";
 import conectarBanco from "./config/db.js";
 
 import userRoutes from "./routes/userRoutes.js";
-import PetRoutes from "./routes/PetRoutes.js";
+import authRoutes from "./routes/authRoutes.js";
+import petRoutes from "./routes/petRoutes.js";
 
 dotenv.config();
 
@@ -16,11 +17,14 @@ app.use(express.json());
 
 conectarBanco();
 
+// Routes
+app.use("/auth", authRoutes);
 app.use("/usuarios", userRoutes);
-app.use("/pets", PetRoutes);
+app.use("/pets", petRoutes);
+app.use("/api/pets", petRoutes);
 
 app.get("/", (req, res) => {
-    res.json({ mensagem: "API PawConnect funcionando 🚀" });
+    res.json({ mensagem: "API PawConnect funcionando 🚀", status: "online" });
 });
 
 // Middleware para rotas não encontradas (404)
@@ -38,4 +42,4 @@ const PORT = process.env.PORT || 5000;
 
 app.listen(PORT, () => {
     console.log(`Servidor rodando na porta ${PORT}`);
-});
+});
