@@ -1,6 +1,7 @@
 import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
+import mongoose from "mongoose";
 
 import conectarBanco from "./config/db.js";
 
@@ -23,17 +24,43 @@ app.use(cors({
 
 app.use(express.json());
 
-// Conexão com o Banco de Dados MongoDB
+// Middleware de Log Estruturado de Requisições
+app.use((req, res, next) => {
+  const start = Date.now();
+  res.on("finish", () => {
+    const duration = Date.now() - start;
+    console.log(`📡 [HTTP] ${req.method} ${req.originalUrl} - ${res.statusCode} (${duration}ms)`);
+  });
+  next();
+});
+
+// Middleware de verificação de prontidão do banco (Garante tolerância ao Cold Start)
+app.use(async (req, res, next) => {
+  if (req.path === "/" || req.path === "/health" || req.path === "/api/health") {
+    return next();
+  }
+  if (mongoose.connection.readyState !== 1) {
+    console.warn(`⏳ [DB WAIT] Requisição ${req.method} ${req.path} aguardando banco de dados...`);
+    try {
+      await conectarBanco();
+    } catch (e) {
+      console.error("🔴 [DB WAIT ERROR]:", e.message);
+    }
+  }
+  next();
+});
+
+// Conexão inicial com o Banco de Dados
 conectarBanco();
 
-// Rotas de Autenticação e Registro (mapeamento universal sem erros 404)
+// Rotas de Autenticação e Registro
 app.use("/auth", authRoutes);
 app.use("/api/auth", authRoutes);
 
 app.use("/usuarios", userRoutes);
 app.use("/api/usuarios", userRoutes);
 
-// Atalhos diretos para endpoints globais de cadastro e login
+// Atalhos diretos para cadastro e login
 app.post("/register", register);
 app.post("/api/register", register);
 app.post("/cadastrar", register);
@@ -43,24 +70,37 @@ app.post("/api/cadastro", register);
 app.post("/login", login);
 app.post("/api/login", login);
 
-// Rotas de Pets (importando PetRoutes.js de forma 100% case-sensitive para o Linux/Render)
+// Rotas de Pets
 app.use("/pets", petRoutes);
 app.use("/api/pets", petRoutes);
 
-// Endpoint de teste e saúde
+// Endpoints de Saúde e Status do Banco
 app.get("/", (req, res) => {
-    res.json({ mensagem: "API PawConnect funcionando 🚀", status: "online", port: process.env.PORT || 5000 });
+    res.json({
+      mensagem: "API PawConnect funcionando 🚀",
+      status: "online",
+      dbStatus: mongoose.connection.readyState === 1 ? "connected" : "connecting",
+      port: process.env.PORT || 5000
+    });
 });
 
 app.get("/health", (req, res) => {
-    res.json({ status: "OK", timestamp: new Date() });
+    res.json({
+      status: "OK",
+      dbReadyState: mongoose.connection.readyState,
+      timestamp: new Date()
+    });
 });
 
 app.get("/api/health", (req, res) => {
-    res.json({ status: "OK", timestamp: new Date() });
+    res.json({
+      status: "OK",
+      dbReadyState: mongoose.connection.readyState,
+      timestamp: new Date()
+    });
 });
 
-// Middleware 404 com log detalhado para o Render
+// Middleware 404
 app.use((req, res) => {
     console.warn(`[404 NOT FOUND] ${req.method} ${req.originalUrl}`);
     res.status(404).json({ mensagem: `Rota '${req.originalUrl}' não encontrada no servidor PawConnect.` });
@@ -68,7 +108,7 @@ app.use((req, res) => {
 
 // Middleware de tratamento global de erros
 app.use((err, req, res, next) => {
-    console.error("Erro interno no servidor:", err);
+    console.error("💥 [GLOBAL SERVER ERROR]:", err);
     res.status(500).json({ mensagem: "Erro interno no servidor.", erro: err.message });
 });
 
