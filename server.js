@@ -12,19 +12,30 @@ dotenv.config();
 
 const app = express();
 
-app.use(cors());
+// Configuração robusta do CORS para aceitar requisições do Front-End
+app.use(cors({
+  origin: "*",
+  methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"],
+}));
+
 app.use(express.json());
 
+// Conexão com o Banco de Dados MongoDB
 conectarBanco();
 
-// Routes
+// Rotas da Aplicação
 app.use("/auth", authRoutes);
 app.use("/usuarios", userRoutes);
 app.use("/pets", petRoutes);
 app.use("/api/pets", petRoutes);
 
 app.get("/", (req, res) => {
-    res.json({ mensagem: "API PawConnect funcionando 🚀", status: "online" });
+    res.json({ mensagem: "API PawConnect funcionando 🚀", status: "online", port: process.env.PORT || 5000 });
+});
+
+app.get("/api/health", (req, res) => {
+    res.json({ status: "OK", timestamp: new Date() });
 });
 
 // Middleware para rotas não encontradas (404)
@@ -41,5 +52,8 @@ app.use((err, req, res, next) => {
 const PORT = process.env.PORT || 5000;
 
 app.listen(PORT, () => {
-    console.log(`Servidor rodando na porta ${PORT}`);
+    console.log(`================================================`);
+    console.log(`🚀 Servidor Back-End PawConnect ativo!`);
+    console.log(`📡 Rodando em: http://localhost:${PORT}`);
+    console.log(`================================================`);
 });
